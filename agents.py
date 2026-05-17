@@ -111,8 +111,8 @@ def run_captain_cool_debate(match_state: MatchState) -> str:
     print("🏏 --- DEBATE CONCLUDED --- 🏏\n")
 
     return {
-        "analyst_facts": analyst_facts,
-        "strategist_proposal": strategist_proposal,
-        "advocate_challenge": advocate_challenge,
-        "final_decision": final_decision
-    }
+    "analyst_facts": analyst_facts,
+    "strategist_proposal": strategist_proposal,
+    "advocate_challenge": advocate_challenge,
+    "final_decision": final_decision
+}

@@ -1,68 +1,148 @@
 import streamlit as st
-from models import MatchState
 from agents import run_captain_cool_debate
+from models import MatchState
+import time
 
-st.set_page_config(page_title="Captain Cool", page_icon="🏏", layout="wide")
+# Premium UI Configuration
+st.set_page_config(
+    page_title="Captain Cool — IPL Strategist",
+    page_icon="🏏",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Custom Styling to make it look incredibly premium
+st.markdown("""
+    <style>
+    .main { background-color: #0f172a; }
+    h1 { color: #f8fafc; font-family: 'Segoe UI', sans-serif; font-weight: 800; }
+    .stButton>button {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        font-weight: bold;
+        border-radius: 8px;
+        padding: 12px;
+        width: 100%;
+        border: none;
+        font-size: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+    }
+    .agent-box {
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        border-left: 5px solid;
+    }
+    .analyst-box { background-color: #1e293b; border-left-color: #3b82f6; border: 1px solid #334155; }
+    .strategist-box { background-color: #1e293b; border-left-color: #10b981; border: 1px solid #334155; }
+    .advocate-box { background-color: #1e293b; border-left-color: #f59e0b; border: 1px solid #334155; }
+    .decision-box { background-color: #1e3a8a; border-left-color: #ef4444; border: 1px solid #3b82f6; }
+    .agent-title { font-weight: 700; font-size: 18px; margin-bottom: 8px; color: #ffffff; display: flex; align-items: center; gap: 8px; }
+    </style>
+""", unsafe_allow_html=True)
 
 st.title("🏏 Captain Cool — Multi-Agent IPL Match Strategist")
+st.caption("Powered by Google Gemini 2.5 Flash & Antigravity Agentic Framework")
+st.markdown("---")
 
-st.markdown("### Live Match State Inputs")
-
-col1, col2, col3, col4 = st.columns(4)
+# App layout split into Inputs (Left) and Brain Room (Right)
+col1, col2 = st.columns([1, 1.3], gap="large")
 
 with col1:
-    innings = st.number_input("Innings", min_value=1, max_value=2, value=1)
-    current_over = st.number_input("Current Over", min_value=0.0, max_value=20.0, value=14.2, step=0.1)
-    score = st.number_input("Score", min_value=0, max_value=400, value=150)
+    st.subheader("📊 Live Match Parameters")
+    
+    with st.container():
+        venue = st.selectbox("Venue", ["Himachal Pradesh Cricket Association Stadium, Dharamshala", "Wankhede Stadium, Mumbai", "M. Chinnaswamy Stadium, Bengaluru"])
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            innings = st.number_input("Innings", min_value=1, max_value=2, value=1)
+            score = st.number_input("Current Score", min_value=0, value=150)
+        with c2:
+            current_over = st.number_input("Current Over", min_value=0.0, max_value=20.0, value=14.2, step=0.1)
+            wickets = st.number_input("Wickets Down", min_value=0, max_value=10, value=2)
+            
+        c3, c4 = st.columns(2)
+        with c3:
+            batsman = st.text_input("Batsman on Strike", value="Virat Kohli")
+        with c4:
+            bowler = st.text_input("Current Bowler", value="Yuzvendra Chahal")
+            
+        c5, c6 = st.columns(2)
+        with c5:
+            pitch = st.text_input("Pitch Condition", value="Good for batting, slight turn")
+        with c6:
+            dew = st.checkbox("Dew Present?", value=False)
+            
+        impact_player = st.checkbox("Has Impact Player Available?", value=True)
+
+    submit_button = st.button("Get Captain's Tactical Decision")
 
 with col2:
-    runs_needed_input = st.number_input("Runs Needed (if chasing)", min_value=0, value=0)
-    runs_needed = runs_needed_input if innings == 2 else None
-    batsman_on_strike = st.text_input("Batsman on Strike", value="Virat Kohli")
-    bowler_name = st.text_input("Bowler Name", value="Yuzvendra Chahal")
-
-with col3:
-    venue = st.text_input("Venue", value="Dharamshala")
-    pitch_condition = st.text_input("Pitch Condition", value="Good for batting, slight turn")
-    is_dew_present = st.checkbox("Dew Present?", value=False)
-
-with col4:
-    has_impact_player = st.checkbox("Has Impact Player?", value=True)
-
-if st.button("Get Captain's Tactical Decision", type="primary", use_container_width=True):
-    match_state = MatchState(
-        innings=innings,
-        current_over=current_over,
-        score=score,
-        runs_needed=runs_needed,
-        batsman_on_strike=batsman_on_strike,
-        bowler_name=bowler_name,
-        venue=venue,
-        pitch_condition=pitch_condition,
-        is_dew_present=is_dew_present,
-        overs_left_per_bowler={bowler_name: 1}, # Mocking this for simplicity in the UI
-        has_impact_player=has_impact_player
-    )
-
-    with st.spinner("Analyzing match state and running internal debate..."):
+    st.subheader("🧠 Brain Room: Agentic Debate Loop")
+    
+    if submit_button:
+        # Create standard MatchState model
+        match_context = MatchState(
+            innings=innings,
+            current_over=float(current_over),
+            score=score,
+            wickets=wickets,
+            batsman_on_strike=batsman,
+            bowler_name=bowler,
+            venue=venue,
+            pitch_condition=pitch,
+            is_dew_present=dew,
+            overs_left_per_bowler={bowler: 1, "Siraj": 2, "Maxwell": 1},
+            has_impact_player=impact_player
+        )
+        
+        status_text = st.empty()
+        
+        # Step 1: Analyst Node
+        status_text.status("🕵️ Match Analyst parsing situational metrics...")
+        time.sleep(1) 
+        
+        # Call backend
         try:
-            debate_result = run_captain_cool_debate(match_state)
+            # Run the backend agent engine loop
+            debate_output = run_captain_cool_debate(match_context)
+            status_text.empty()
             
-            st.markdown("---")
-            st.subheader("Internal Debate Log")
+            # Render Analyst Card
+            st.markdown(f"""
+                <div class="agent-box analyst-box">
+                    <div class="agent-title">📊 Match Analyst Insights</div>
+                    <p style="color: #cbd5e1; margin: 0;">{debate_output.get('analyst_facts', 'Processing matchups...')}</p>
+                </div>
+            """, unsafe_allow_html=True)
             
-            if isinstance(debate_result, dict):
-                st.info(f"**📊 Match Analyst Facts:**\n\n{debate_result.get('analyst_facts', '')}")
-                st.success(f"**💡 Strategist's Initial Proposal:**\n\n{debate_result.get('strategist_proposal', '')}")
-                st.error(f"**🔥 Devil's Advocate Challenge:**\n\n{debate_result.get('advocate_challenge', '')}")
-                
-                st.markdown("---")
-                st.subheader("🏆 Final Captain's Decision")
-                st.write(debate_result.get('final_decision', ''))
-            else:
-                # Fallback if it still returns a string
-                st.write(debate_result)
-                
+            # Render Strategist Card
+            st.markdown(f"""
+                <div class="agent-box strategist-box">
+                    <div class="agent-title">💡 Strategist Tactical Proposal</div>
+                    <p style="color: #cbd5e1; margin: 0;">{debate_output.get('strategist_proposal', 'Formulating blueprint...')}</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Render Devil's Advocate Card
+            st.markdown(f"""
+                <div class="agent-box advocate-box">
+                    <div class="agent-title">🔥 Devil's Advocate Stress-Test</div>
+                    <p style="color: #cbd5e1; margin: 0;">{debate_output.get('advocate_challenge', 'Sifting for vulnerabilities...')}</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Render Final Decision Card
+            st.markdown(f"""
+                <div class="agent-box decision-box">
+                    <div class="agent-title">🎯 Ultimate Captain's Decree</div>
+                    <p style="color: #e2e8f0; margin: 0; font-weight: 600;">{debate_output.get('final_decision', 'Finalizing play...')}</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
         except Exception as e:
-            st.error(f"Error during debate: {e}")
-            st.warning("Please make sure your GEMINI_API_KEY environment variable is set and valid, then try again.")
+            status_text.empty()
+            st.error(f"Execution Error: {str(e)}")
+    else:
+        st.info("Awaiting input parameters. Click the tactical decision button to initiate the Gemini Agent reasoning cycle.")
