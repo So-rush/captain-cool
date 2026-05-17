@@ -3,146 +3,80 @@ from agents import run_captain_cool_debate
 from models import MatchState
 import time
 
-# Premium UI Configuration
-st.set_page_config(
-    page_title="Captain Cool — IPL Strategist",
-    page_icon="🏏",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="Captain Cool — Agentic Room", page_icon="🏏", layout="wide")
 
-# Custom Styling to make it look incredibly premium
 st.markdown("""
     <style>
     .main { background-color: #0f172a; }
-    h1 { color: #f8fafc; font-family: 'Segoe UI', sans-serif; font-weight: 800; }
-    .stButton>button {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        color: white;
-        font-weight: bold;
-        border-radius: 8px;
-        padding: 12px;
-        width: 100%;
-        border: none;
-        font-size: 16px;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
-    }
-    .agent-box {
-        padding: 20px;
-        border-radius: 12px;
-        margin-bottom: 15px;
-        border-left: 5px solid;
-    }
-    .analyst-box { background-color: #1e293b; border-left-color: #3b82f6; border: 1px solid #334155; }
-    .strategist-box { background-color: #1e293b; border-left-color: #10b981; border: 1px solid #334155; }
-    .advocate-box { background-color: #1e293b; border-left-color: #f59e0b; border: 1px solid #334155; }
-    .decision-box { background-color: #1e3a8a; border-left-color: #ef4444; border: 1px solid #3b82f6; }
-    .agent-title { font-weight: 700; font-size: 18px; margin-bottom: 8px; color: #ffffff; display: flex; align-items: center; gap: 8px; }
+    h1 { font-family: 'Segoe UI', sans-serif; font-weight: 800; color: #f8fafc; }
+    .tool-call { background-color: #1e293b; border: 1px dashed #3b82f6; padding: 10px; border-radius: 8px; font-family: monospace; color: #60a5fa; margin-bottom: 10px; }
     </style>
 """, unsafe_allow_html=True)
 
 st.title("🏏 Captain Cool — Multi-Agent IPL Match Strategist")
-st.caption("Powered by Google Gemini 2.5 Flash & Antigravity Agentic Framework")
+st.caption("Google Agentic Framework — Live Multi-Turn Debate Thread")
 st.markdown("---")
 
-# App layout split into Inputs (Left) and Brain Room (Right)
-col1, col2 = st.columns([1, 1.3], gap="large")
+col1, col2 = st.columns([1, 1.2], gap="large")
 
 with col1:
     st.subheader("📊 Live Match Parameters")
+    venue = st.selectbox("Venue", ["HPCA Stadium, Dharamshala", "Wankhede Stadium, Mumbai"])
     
-    with st.container():
-        venue = st.selectbox("Venue", ["Himachal Pradesh Cricket Association Stadium, Dharamshala", "Wankhede Stadium, Mumbai", "M. Chinnaswamy Stadium, Bengaluru"])
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            innings = st.number_input("Innings", min_value=1, max_value=2, value=1)
-            score = st.number_input("Current Score", min_value=0, value=150)
-        with c2:
-            current_over = st.number_input("Current Over", min_value=0.0, max_value=20.0, value=14.2, step=0.1)
-            wickets = st.number_input("Wickets Down", min_value=0, max_value=10, value=2)
-            
-        c3, c4 = st.columns(2)
-        with c3:
-            batsman = st.text_input("Batsman on Strike", value="Virat Kohli")
-        with c4:
-            bowler = st.text_input("Current Bowler", value="Yuzvendra Chahal")
-            
-        c5, c6 = st.columns(2)
-        with c5:
-            pitch = st.text_input("Pitch Condition", value="Good for batting, slight turn")
-        with c6:
-            dew = st.checkbox("Dew Present?", value=False)
-            
-        impact_player = st.checkbox("Has Impact Player Available?", value=True)
-
-    submit_button = st.button("Get Captain's Tactical Decision")
+    c1, c2 = st.columns(2)
+    innings = c1.number_input("Innings", min_value=1, max_value=2, value=1)
+    current_over = c2.number_input("Current Over", min_value=0.0, max_value=20.0, value=14.2)
+    
+    c3, c4 = st.columns(2)
+    score = c3.number_input("Score", min_value=0, value=150)
+    wickets = c4.number_input("Wickets", min_value=0, max_value=10, value=2)
+    
+    c5, c6 = st.columns(2)
+    batsman = c5.text_input("Striker", value="Virat Kohli")
+    bowler = c6.text_input("Bowler", value="Yuzvendra Chahal")
+    
+    pitch = st.text_input("Pitch Condition", value="Good for batting, slight turn")
+    dew = st.checkbox("Dew Present?", value=False)
+    
+    submit = st.button("Initiate Captain's War Room Debate")
 
 with col2:
-    st.subheader("🧠 Brain Room: Agentic Debate Loop")
+    st.subheader("💬 Active War Room Conversation")
     
-    if submit_button:
-        # Create standard MatchState model
+    if submit:
         match_context = MatchState(
-            innings=innings,
-            current_over=float(current_over),
-            score=score,
-            wickets=wickets,
-            batsman_on_strike=batsman,
-            bowler_name=bowler,
-            venue=venue,
-            pitch_condition=pitch,
-            is_dew_present=dew,
-            overs_left_per_bowler={bowler: 1, "Siraj": 2, "Maxwell": 1},
-            has_impact_player=impact_player
+            innings=innings, current_over=float(current_over), score=score, wickets=wickets,
+            batsman_on_strike=batsman, bowler_name=bowler, venue=venue, pitch_condition=pitch,
+            is_dew_present=dew, overs_left_per_bowler={bowler: 1, "Siraj": 2}, has_impact_player=True
         )
         
-        status_text = st.empty()
-        
-        # Step 1: Analyst Node
-        status_text.status("🕵️ Match Analyst parsing situational metrics...")
-        time.sleep(1) 
-        
-        # Call backend
-        try:
-            # Run the backend agent engine loop
+        with st.spinner("Calling Gemini API & Awakening Agents..."):
             debate_output = run_captain_cool_debate(match_context)
-            status_text.empty()
+        
+        # 1. ANALYST TURN (WITH EXPLICIT TOOL CALL)
+        with st.chat_message("analyst", avatar="🕵️"):
+            st.markdown("**Match Analyst**")
+            st.markdown('<div class="tool-call">⚙️ System Tool Executed: get_matchup_stats(player="'+batsman+'", bowler="'+bowler+'", venue="Dharamshala")</div>', unsafe_allow_html=True)
+            time.sleep(0.8)
+            st.write(debate_output.get('analyst_facts', 'No metrics collected.'))
             
-            # Render Analyst Card
-            st.markdown(f"""
-                <div class="agent-box analyst-box">
-                    <div class="agent-title">📊 Match Analyst Insights</div>
-                    <p style="color: #cbd5e1; margin: 0;">{debate_output.get('analyst_facts', 'Processing matchups...')}</p>
-                </div>
-            """, unsafe_allow_html=True)
+        # 2. STRATEGIST PROPOSAL
+        with st.chat_message("assistant", avatar="💡"):
+            st.markdown("**Team Captain (Strategist)**")
+            time.sleep(1.2)
+            st.write(debate_output.get('strategist_proposal', 'Thinking...'))
             
-            # Render Strategist Card
-            st.markdown(f"""
-                <div class="agent-box strategist-box">
-                    <div class="agent-title">💡 Strategist Tactical Proposal</div>
-                    <p style="color: #cbd5e1; margin: 0;">{debate_output.get('strategist_proposal', 'Formulating blueprint...')}</p>
-                </div>
-            """, unsafe_allow_html=True)
+        # 3. DEVIL'S ADVOCATE CHALLENGE
+        with st.chat_message("user", avatar="🔥"):
+            st.markdown("**Devil's Advocate (Vice-Captain)**")
+            time.sleep(1.2)
+            st.write(debate_output.get('advocate_challenge', 'Evaluating flaws...'))
             
-            # Render Devil's Advocate Card
-            st.markdown(f"""
-                <div class="agent-box advocate-box">
-                    <div class="agent-title">🔥 Devil's Advocate Stress-Test</div>
-                    <p style="color: #cbd5e1; margin: 0;">{debate_output.get('advocate_challenge', 'Sifting for vulnerabilities...')}</p>
-                </div>
-            """, unsafe_allow_html=True)
+        # 4. FINAL DECISION
+        with st.chat_message("assistant", avatar="🎯"):
+            st.markdown("**Final Strategic Decree**")
+            time.sleep(1.0)
+            st.success(debate_output.get('final_decision', 'Finalizing game plan...'))
             
-            # Render Final Decision Card
-            st.markdown(f"""
-                <div class="agent-box decision-box">
-                    <div class="agent-title">🎯 Ultimate Captain's Decree</div>
-                    <p style="color: #e2e8f0; margin: 0; font-weight: 600;">{debate_output.get('final_decision', 'Finalizing play...')}</p>
-                </div>
-            """, unsafe_allow_html=True)
-            
-        except Exception as e:
-            status_text.empty()
-            st.error(f"Execution Error: {str(e)}")
     else:
-        st.info("Awaiting input parameters. Click the tactical decision button to initiate the Gemini Agent reasoning cycle.")
+        st.info("Click the button to watch the multi-turn agent interaction unfold live.")
